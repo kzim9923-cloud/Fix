@@ -62,8 +62,16 @@ jobs:
       # google-services.json / Firebase env vars are optional — app/build.gradle
       # just warns and disables Firebase-backed features when they're absent, so
       # the build still succeeds without them.
+      # `assembleFocusWebkitRelease` pulls in `lintVitalFocusWebkitRelease` by
+      # default (AGP wires lint into release assembly). That lint task builds
+      # a cross-variant model and ends up resolving OTHER flavor combos'
+      # classpaths too (previewWebkitRelease, focusWebkitDebugAndroidTest,
+      # etc) - combos this repo's own comments say aren't fully wired, and
+      # which pull in dependencies no longer available (e.g. old JCenter-only
+      # screenshot-testing libraries). Skip it: we only need the APK here,
+      # not a lint report.
       - name: Build release APK (assembleFocusWebkitRelease)
-        run: ./gradlew assembleFocusWebkitRelease --stacktrace --no-daemon
+        run: ./gradlew assembleFocusWebkitRelease -x lintVitalFocusWebkitRelease --stacktrace --no-daemon
 
       - name: Locate unsigned APK
         id: find_apk
