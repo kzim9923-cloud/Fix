@@ -22,6 +22,21 @@ jobs:
         with:
           submodules: recursive
 
+      # actions/checkout only populates a submodule when the repo's tree has
+      # a real submodule (gitlink) entry for this path. If that link is
+      # missing or broken (e.g. this repo was pushed from an extracted zip
+      # rather than a git clone that preserved submodules), the directory
+      # is left empty and :app fails to resolve :permissionhandler with
+      # "None of the consumable configurations have attributes." Fetch it
+      # directly here so the build doesn't depend on that link being intact.
+      - name: Ensure permissionhandler module is present
+        run: |
+          if [ ! -f components/utils/android-permission-handler/permissionhandler/build.gradle ]; then
+            echo "permissionhandler module missing/empty - cloning it directly"
+            rm -rf components/utils/android-permission-handler
+            git clone --depth 1 https://github.com/mozilla-mobile/android-permission-handler.git components/utils/android-permission-handler
+          fi
+
       # sourceCompatibility/targetCompatibility in app/build.gradle is Java 8,
       # and this project's AGP/Gradle versions are old enough that a newer JDK
       # can fail to configure the build — JDK 8 matches what the project expects.
