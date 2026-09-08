@@ -73,6 +73,12 @@ jobs:
       - name: Build release APK (assembleFocusWebkitRelease)
         run: ./gradlew assembleFocusWebkitRelease -x lintVitalFocusWebkitRelease --stacktrace --no-daemon
 
+      # Debug build - unsigned by Gradle's default debug keystore, no
+      # signing secrets required. Useful for quick testing/side-loading
+      # without needing the release keystore secrets configured.
+      - name: Build debug APK (assembleFocusWebkitDebug)
+        run: ./gradlew assembleFocusWebkitDebug --stacktrace --no-daemon
+
       - name: Locate unsigned APK
         id: find_apk
         run: |
@@ -89,6 +95,24 @@ jobs:
           fi
           echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
           echo "apk_dir=$(dirname "$APK_PATH")" >> "$GITHUB_OUTPUT"
+
+      - name: Locate debug APK
+        id: find_debug_apk
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/focusWebkit/debug -iname "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No debug APK found under app/build/outputs/apk/focusWebkit/debug" >&2
+            find app/build/outputs/apk -iname "*.apk" >&2 || true
+            exit 1
+          fi
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefoxlite-debug
+          path: ${{ steps.find_debug_apk.outputs.apk_path }}
+          if-no-files-found: error
 
       # Signing is optional and only runs if a keystore secret has been configured
       # in the repo (Settings -> Secrets and variables -> Actions):
