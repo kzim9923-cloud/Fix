@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       # sourceCompatibility/targetCompatibility in app/build.gradle is Java 8,
       # and this project's AGP/Gradle versions are old enough that a newer JDK
